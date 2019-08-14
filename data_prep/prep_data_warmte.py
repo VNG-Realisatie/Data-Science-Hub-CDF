@@ -5,17 +5,55 @@ Ontwikkelaar: Kees Kraan
 '''
 # Import libraries
 import pandas as pd
-import json
 
 # Define constants
-filenames = ['Stedin_Verbruiksdata_2019','Liander_Verbruiksdata_2019']
+datafiles = ['Stedin_Verbruiksdata_2019','Liander_Verbruiksdata_2019','Enexis_Verbruiksdata_2019']
+keyfile = '../warmtetransitie/pc6hnr20180801_gwb-vs2.csv'
+gemeenteselectie = pd.DataFrame({
+        'Gemeente': ['Rotterdam', 'Amsterdam', 'Zaanstad', 'Dordrecht', 'Zaltbommel', 'Enkhuizen', 'Hengelo', 'Zoetermeer',
+                     'Haarlem', 'Gouda', 'Leusden', 'Groningen'],
+        'CBS_code': ['599', '363', '479', '505', '297', '388', '164', '637', '392', '513', '327', '14']})
 
-for file in filenames:
-    file_path = 'warmtetransitie/'+file+'.csv'
-    # Read data
-    df = pd.read_csv(file_path, sep='\t')
-    # convert data to json
-    Export = df.to_json(orient='index')
-    Export = '{"'+file+'":'+Export+'}'
-    with open('API/fastapi/app/data/'+file+'.json', 'w') as f:
+def read_csv(path):
+    df = pd.read_csv(path, sep='\t')
+    if len(df.columns)==1:
+        df = pd.read_csv(path, sep=';')
+    if len(df.columns)==1:
+        df = pd.read_csv(path, sep=',')
+    return df
+
+
+def grouphouses(df):
+    dfa = df.groupby(['PC6','Buurt2018']).count()[['Huisnummer']]
+    dfa = dfa.rename(columns={'Huisnummer':'ca'})
+    dfa = dfa.reset_index(level=['Buurt2018','PC6'])
+    dfb = df.groupby('PC6').count()[['Huisnummer']]
+    dfb = dfb.rename(columns={'Huisnummer':'cb'})
+    dfx = pd.merge(dfa, dfb, on='PC6', how='outer')
+    dfx['ratio']=dfx.ca/dfx.cb
+    return dfx
+
+
+def selectregion(df,selection):
+    if 'POSTCODE_VAN' in df.columns:
+        result = df[df['POSTCODE_VAN'].isin(sleuteltabel['PC6'])]
+        return result
+
+
+def write_df_to_json(df,filename):
+    Export = df.to_json()
+    with open(filename, 'w') as f:
         f.write(Export)
+
+
+originalsleutel = pd.read_csv(keyfile,delimiter=';')
+sleuteltabel = originalsleutel[originalsleutel['Gemeente2018'].isin(gemeenteselectie['CBS_code'])]
+sleuteltabel = grouphouses(sleuteltabel)
+write_df_to_json(sleuteltabel, '../fastapi/app/data/sleutel.json')
+
+for file in datafiles:
+    file_path = '../warmtetransitie/'+file+'.csv'
+    # Read data
+    data = selectregion(read_csv(file_path),sleuteltabel)
+    # write data as json
+    write_df_to_json(data, '../fastapi/app/data/'+file+'.json')
