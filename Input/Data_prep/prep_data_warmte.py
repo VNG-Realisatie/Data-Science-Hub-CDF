@@ -8,7 +8,7 @@ import pandas as pd
 
 # Define constants
 datafiles = ['Stedin_Verbruiksdata_2019','Liander_Verbruiksdata_2019','Enexis_Verbruiksdata_2019']
-keyfile = '../warmtetransitie/pc6hnr20180801_gwb-vs2.csv'
+keyfile = '../Data/pc6hnr20180801_gwb-vs2.csv'
 gemeenteselectie = pd.DataFrame({
         'Gemeente': ['Rotterdam', 'Amsterdam', 'Zaanstad', 'Dordrecht', 'Zaltbommel', 'Enkhuizen', 'Hengelo', 'Zoetermeer',
                      'Haarlem', 'Gouda', 'Leusden', 'Groningen'],
@@ -42,7 +42,7 @@ def selectregion(df,selection):
 
 
 def write_df_to_json(df,filename):
-    Export = df.to_json()
+    Export = df.to_json(orient='index')
     with open(filename, 'w') as f:
         f.write(Export)
 
@@ -53,7 +53,7 @@ sleuteltabel = grouphouses(sleuteltabel)
 write_df_to_json(sleuteltabel, '../fastapi/app/data/sleutel.json')
 
 for file in datafiles:
-    file_path = '../warmtetransitie/'+file+'.csv'
+    file_path = '../Data/'+file+'.csv'
     # Read data
     data = selectregion(read_csv(file_path),sleuteltabel)
     # write data as json
