@@ -1,2 +1,11 @@
-# logging
-logging.txt
+
+# Elastic Beanstalk Files
+input/.elasticbeanstalk/*
+!input/.elasticbeanstalk/*.cfg.yml
+!input/.elasticbeanstalk/*.global.yml
+
+# Pycharm files
+.input/idea/
+
+# Data files
+.input/Data/
