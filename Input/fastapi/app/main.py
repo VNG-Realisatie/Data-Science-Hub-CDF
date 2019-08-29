@@ -7,12 +7,11 @@ Ontwikkelaar: Kees Kraan
 from fastapi import FastAPI
 import pandas as pd
 import uvicorn
-import json
 import os
 import datetime
 import ast
 from starlette.requests import Request
-from starlette.responses import Response
+import cbsodata
 
 def write_logging (request, page):
     """ Get the headers of a Request of a specific page:
@@ -33,13 +32,15 @@ for file in os.listdir(filelocation):
     if file.endswith('.json'):
         files.append(file)
 
+gemeenteselectie=['BU0599','BU0363','BU0479','BU0505','BU0297','BU0388','BU0164','BU0637','BU0392','BU0513','BU0327','BU0014']
+cbscolumns=['Codering_3','Koopwoningen_40','InBezitOverigeVerhuurders_43','InBezitWoningcorporatie_42','EigendomOnbekend_44','BouwjaarVoor2000_45','BouwjaarVanaf2000_46']
 # initiate API
 app = FastAPI()
 
 @app.get("/")
 async def root(request: Request):
     write_logging(request, 'root')
-    return {"Beschikbare data": [value for value in files]}
+    return {"Beschikbare bestanden": [value for value in files]}
 
 
 @app.get("/getdata/{file}")
@@ -54,16 +55,14 @@ async def read_item(request: Request, file: str):
         return {'result': 'Bestand niet gevonden'}
 
 
-@app.get("/test")
-def testfunc(request: Request,):
-    write_logging(request, 'test')
-    return {"value": app.openapi_url}
-
-
-@app.get("/items/{item_id}")
-async def read_item(request: Request, item_id: int, q: str = None):
-    write_logging(request, 'items')
-    return {"item_id": item_id, "q": q}
+@app.get("/getcbsdata")
+async def get_data(request: Request):
+    write_logging(request, 'CBS-API ')
+    data = pd.DataFrame(cbsodata.get_data('84286NED'))
+    data = data[cbscolumns]
+    data = data[data['Codering_3'].str.contains('|'.join(gemeenteselectie))]
+    data = data.fillna(0)
+    return data.to_dict(orient='index')
 
 
 @app.get("/logging")
