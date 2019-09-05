@@ -33,7 +33,8 @@ for file in os.listdir(filelocation):
         files.append(file)
 
 gemeenteselectie=['BU0599','BU0363','BU0479','BU0505','BU0297','BU0388','BU0164','BU0637','BU0392','BU0513','BU0327','BU0014']
-cbscolumns=['Codering_3','Koopwoningen_40','InBezitOverigeVerhuurders_43','InBezitWoningcorporatie_42','EigendomOnbekend_44','BouwjaarVoor2000_45','BouwjaarVanaf2000_46']
+cbscolumns=['Codering_3','Koopwoningen_40','InBezitOverigeVerhuurders_43','InBezitWoningcorporatie_42','EigendomOnbekend_44','BouwjaarVoor2000_45','BouwjaarVanaf2000_46','k_0Tot15Jaar_8','k_15Tot25Jaar_9','k_25Tot45Jaar_10','k_45Tot65Jaar_11','k_65JaarOfOuder_12']
+
 # initiate API
 app = FastAPI()
 
